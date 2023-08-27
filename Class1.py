@@ -40,11 +40,11 @@ f2.show()
 result_z=f1.zarb(f2)
 result_z.show()
 
-result_j=f1.sum(f2)
-result_j.show()
+result_s=f1.sum(f2)
+result_s.show()
 
 result_t=f1.taghsim_kasr(f2)
 result_t.show()
 
-result_m=f1.tafrigh(f2)
-result_m.show()
+result_ta=f1.tafrigh(f2)
+result_ta.show()
