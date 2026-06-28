@@ -1,0 +1,124 @@
+class NFASimulator:
+    def init(self, states, alphabet, transitions, start_state, final_states):
+        """
+        Initialize the NFA components:
+        - states: Set of all states (Q)
+        - alphabet: Set of allowed input symbols (Sigma)
+        - transitions: Nested dict where transitions[state][char] is a SET of next states
+        - start_state: The initial state (q0)
+        - final_states: Set of accepting states (F)
+        """
+        self.states = set(states)
+        self.alphabet = set(alphabet)
+        self.transitions = transitions
+        self.start_state = start_state
+        self.final_states = set(final_states)
+
+    def get_epsilon_closure(self, current_states):
+        """
+        Finds all states reachable via Epsilon (_) transitions from the given set of states.
+        """
+        closure = set(current_states)
+        stack = list(current_states)
+
+        while stack:
+            state = stack.pop()
+            # We use '_' as the Epsilon symbol
+            if state in self.transitions and '_' in self.transitions[state]:
+                for next_state in self.transitions[state]['_']:
+                    if next_state not in closure:
+                        closure.add(next_state)
+                        stack.append(next_state)
+        return closure
+
+    def evaluate(self, input_string):
+        """
+        Evaluates the input string on the NFA and tracks all possible paths.
+        """
+        print(f"\n--- Starting NFA Evaluation for: '{input_string}' ---")
+        
+        # Initial states set includes the start state and its epsilon closure
+        current_states = self.get_epsilon_closure({self.start_state})
+        print(f"Initial active states (after Epsilon-closure): {current_states}")
+        print("-" * 50)
+
+        # Process each character from left to right
+        for index, char in enumerate(input_string, 1):
+            if char not in self.alphabet:
+                print(f"Error at step {index}: Character '{char}' is NOT in alphabet!")
+                return "Reject"
+
+            next_states = set()
+            # Move from all currently active states
+            for state in current_states:
+                if state in self.transitions and char in self.transitions[state]:
+                    # Union all possible next states
+                    next_states.update(self.transitions[state][char])
+
+            # Apply epsilon closure on the newly reached states
+            current_states = self.get_epsilon_closure(next_states)
+            print(f"Step {index} after reading '{char}': Active states -> {current_states}")
+
+            # If no states are active, the machine is stuck
+            if not current_states:
+                print("Machine got stuck (No active states left).")
+                print("-" * 50)
+                return "Reject"
+
+        print("-" * 50)
+        print(f"Final active states at the end of string: {current_states}")
+        print(f"Accepting states (F): {self.final_states}")
+
+        # Check if at least one final state is inside the active states
+        intersect = current_states.intersection(self.final_states)
+        if intersect:
+            print(f"Match found in accepting states: {intersect}")
+            print("Result: Accept")
+            return "Accept"
+        else:
+            print("Result: Reject")
+            return "Reject"
+
+
+# =========================================================================
+# Execution Example (Testing the NFA)
+# =========================================================================
+if name == "__main__":
+    # Let's define an NFA components
+    # States: q0, q1, q2
+    # Alphabet: a, b
+    # Epsilon is represented by '_'
+    
+    Q = {"q0", "q1", "q2"}
+    Sigma = {"a", "b"}
+    
+    # Transition function table:
+    # q0 with 'a' can stay at q0 or go to q1
+    # q1 with 'b' goes to q2
+    # q0 has an epsilon (_) transition to q2 (just for testing epsilon)
+    Delta = {
+        "q0": {"a": {"q0", "q1"}, "_": {"q2"}},
+        "q1": {"b": {"q2"}},
+        "q2": {"b": {"q2"}}
+    }
+    
+    q0 = "q0"
+    F = {"q2"} # Accepting state
+
+    # Create NFA Simulator instance
+    nfa = NFASimulator(states=Q, alphabet=Sigma, transitions=Delta, start_state=q0, final_states=F)
+
+    # Test Case 1: Testing a valid string
+    test_str_1 = "ab"
+    result_1 = nfa.evaluate(test_str_1)
+    print(f"Final Outcome for '{test_str_1}': {result_1}")
+
+    # Test Case 2: Testing an invalid string
+    test_str_2 = "ba"
+    result_2 = nfa.evaluate(test_str_2)
+    print(f"\nFinal Outcome for '{test_str_2}': {result_2}")
+
+
+
+
+
